@@ -21,31 +21,33 @@
             </template>
 
             <t-space direction="vertical" size="large" class="full-width">
-              <t-card title="对话上下文" bordered>
-                <t-space direction="vertical" class="full-width">
-                  <t-space align="center" break-line>
-                    <t-tag theme="primary" variant="light">当前阶段</t-tag>
-                    <t-radio-group v-model="profile.stage" variant="default-filled" @change="refreshAll">
-                      <t-radio-button value="大一">大一</t-radio-button>
-                      <t-radio-button value="大二">大二</t-radio-button>
-                      <t-radio-button value="大三">大三</t-radio-button>
-                      <t-radio-button value="大四/研">大四/研</t-radio-button>
-                    </t-radio-group>
-                    <t-tag theme="success" variant="light">目标方向</t-tag>
-                    <t-select v-model="profile.target" :options="targetOptions" @change="refreshAll" />
+              <t-collapse :default-value="['context']">
+                <t-collapse-panel value="context" header="对话上下文">
+                  <t-space direction="vertical" class="full-width">
+                    <t-space align="center" break-line>
+                      <t-tag theme="primary" variant="light">当前阶段</t-tag>
+                      <t-radio-group v-model="profile.stage" variant="default-filled" @change="refreshAll">
+                        <t-radio-button value="大一">大一</t-radio-button>
+                        <t-radio-button value="大二">大二</t-radio-button>
+                        <t-radio-button value="大三">大三</t-radio-button>
+                        <t-radio-button value="大四/研">大四/研</t-radio-button>
+                      </t-radio-group>
+                      <t-tag theme="success" variant="light">目标方向</t-tag>
+                      <t-select v-model="profile.target" :options="targetOptions" @change="refreshAll" />
+                    </t-space>
+                    <t-upload
+                      v-model="files"
+                      theme="file"
+                      :auto-upload="false"
+                      :multiple="true"
+                      :max="4"
+                      :allow-upload-duplicate-file="true"
+                      placeholder="上传简历/项目文档/PDF/Word/txt/md，求职鹅会解析并写入长期经历档案"
+                      @select-change="handleSelectChange"
+                    />
                   </t-space>
-                  <t-upload
-                    v-model="files"
-                    theme="file"
-                    :auto-upload="false"
-                    :multiple="true"
-                    :max="4"
-                    :allow-upload-duplicate-file="true"
-                    placeholder="上传简历/项目文档/PDF/Word/txt/md，求职鹅会解析并写入长期经历档案"
-                    @select-change="handleSelectChange"
-                  />
-                </t-space>
-              </t-card>
+                </t-collapse-panel>
+              </t-collapse>
 
               <t-chat-list class="chat-list" :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
                 <template #content="{ item }">
