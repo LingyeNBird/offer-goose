@@ -646,6 +646,8 @@ body {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding-bottom: 128px;
+  scroll-padding-bottom: 128px;
 }
 
 .chat-sender {
