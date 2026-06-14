@@ -51,6 +51,11 @@ app.post('/api/state', async (request, response) => {
 const fallbackAsset = (experience = '', target = '产品策划', stage = '大三') => ({
   title: /小程序|系统|平台|网站|应用/.test(experience) ? '校园产品从 0 到 1 项目经历' : '可迁移能力型校园经历',
   summary: experience.slice(0, 180) || '暂未收集到足够经历。',
+  scores: {
+    asset: /\d|百|千|万|%|用户|试用|增长/.test(experience) ? 86 : 68,
+    match: 82,
+    action: /焦虑|担心|迷茫|比不过|害怕|不会/.test(experience) ? 74 : 84,
+  },
   abilityTags: [
     /需求|用户|调研|原型|产品/.test(experience) ? '用户洞察' : '经历挖掘',
     /开发|代码|前端|后端|系统|小程序/.test(experience) ? '技术理解' : '表达整理',
@@ -117,7 +122,7 @@ app.post('/api/upload', upload.array('files', 5), async (request, response) => {
 });
 
 app.post('/api/analyze', async (request, response) => {
-  const { experience = '', target = '产品策划', stage = '大三' } = request.body || {};
+  const { experience = '', target = '产品策划', stage = '大三', focus = 'all' } = request.body || {};
 
   if (!openai) {
     response.json(fallbackAsset(experience, target, stage));
@@ -131,11 +136,11 @@ app.post('/api/analyze', async (request, response) => {
       messages: [
         {
           role: 'system',
-          content: '你是求职鹅，擅长把大学生经历结构化为求职资产。只返回 JSON，不要 Markdown。字段必须包含 title, summary, abilityTags, starStory, resumeBullets, missingInfo, roleMatches, careMessage, growthPlan, nextAction。roleMatches 每项含 name, score, reason；growthPlan 每项含 label, title, content。',
+          content: '你是求职鹅，擅长把大学生经历结构化为求职资产。只返回 JSON，不要 Markdown。字段必须包含 title, summary, scores, abilityTags, starStory, resumeBullets, missingInfo, roleMatches, careMessage, growthPlan, nextAction。scores 必须包含 asset, match, action 三个 0-100 的整数；roleMatches 每项含 name, score, reason；growthPlan 每项含 label, title, content。发展建议、情绪陪伴、仪表盘分数都必须由你基于经历生成。',
         },
         {
           role: 'user',
-          content: `学生阶段：${stage}\n目标方向：${target}\n经历：${experience}`,
+          content: `生成重点：${focus}\n学生阶段：${stage}\n目标方向：${target}\n经历：${experience}`,
         },
       ],
       temperature: 0.4,

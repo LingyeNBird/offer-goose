@@ -3,28 +3,26 @@
     <t-header class="app-header">
       <t-row align="middle" justify="space-between" :gutter="[24, 24]">
         <t-col :xs="12" :lg="8">
-          <t-space direction="vertical" size="small">
-            <t-space align="center" break-line>
-              <t-tag theme="primary" variant="light">求职鹅</t-tag>
-              <t-tag theme="success" variant="outline">学生求职成长陪伴智能体</t-tag>
-              <t-tag theme="warning" variant="light">Docker Demo</t-tag>
+          <t-space align="center" size="large">
+            <t-avatar :image="gooseAvatar" size="80px" />
+            <t-space direction="vertical" size="small">
+              <t-typography-title :level="1">求职鹅 Offer Goose</t-typography-title>
+              <t-typography-title :level="4">把每一段普通经历，养成可投递、可面试、可成长的 Offer 资产</t-typography-title>
+              <t-typography-text>
+                对话倾诉、上传经历、后端持久化档案、AI 结构化整理、流式情感陪伴与鹅厂方向建议，一站完成。
+              </t-typography-text>
             </t-space>
-            <t-typography-title :level="2">先接住焦虑，再把经历变成 Offer 资产</t-typography-title>
-            <t-typography-text>
-              学生可对话倾诉或上传个人经历，求职鹅自动追问、整理成结构化文档，并给出鹅厂岗位发展建议与本周行动。
-            </t-typography-text>
           </t-space>
         </t-col>
         <t-col :xs="12" :lg="4">
-          <t-card title="评审看点" bordered hover-shadow>
+          <t-space direction="vertical" size="small">
+            <t-alert theme="success" message="长期经历档案已由后端维护，刷新后可继续对话。" />
             <t-space break-line>
-              <t-tag theme="primary">对话核心</t-tag>
-              <t-tag theme="success">经历文档化</t-tag>
-              <t-tag theme="warning">情感陪伴</t-tag>
-              <t-tag theme="danger">发展建议</t-tag>
-              <t-tag theme="default">可落地部署</t-tag>
+              <t-tag theme="primary" variant="light">AI 陪伴</t-tag>
+              <t-tag theme="success" variant="light">经历资产化</t-tag>
+              <t-tag theme="warning" variant="light">鹅厂方向建议</t-tag>
             </t-space>
-          </t-card>
+          </t-space>
         </t-col>
       </t-row>
     </t-header>
@@ -32,55 +30,37 @@
     <t-content class="app-content">
       <t-row :gutter="[24, 24]">
         <t-col :xs="12" :xl="7">
-          <t-card title="和求职鹅聊聊你的经历" bordered>
+          <t-card title="求职鹅对话" bordered>
             <template #actions>
               <t-button theme="default" variant="text" @click="loadSample">一键填入示例</t-button>
             </template>
 
             <t-space direction="vertical" size="large" class="full-width">
-              <t-alert
-                theme="info"
-                message="你可以直接说：我做过什么、我担心什么、我想投什么岗位。求职鹅会帮你把普通经历翻译成可投递资产。"
-              />
-
-              <t-row :gutter="[16, 16]">
-                <t-col :xs="12" :md="6">
-                  <t-form :data="profile" layout="vertical" label-align="top">
-                    <t-form-item label="当前阶段">
-                      <t-radio-group v-model="profile.stage" variant="default-filled" @change="refreshAll">
-                        <t-radio-button value="大一">大一</t-radio-button>
-                        <t-radio-button value="大二">大二</t-radio-button>
-                        <t-radio-button value="大三">大三</t-radio-button>
-                        <t-radio-button value="大四/研">大四/研</t-radio-button>
-                      </t-radio-group>
-                    </t-form-item>
-                    <t-form-item label="目标方向">
-                      <t-select v-model="profile.target" :options="targetOptions" @change="refreshAll" />
-                    </t-form-item>
-                  </t-form>
-                </t-col>
-                <t-col :xs="12" :md="6">
-                  <t-space direction="vertical" class="full-width">
-                    <t-upload
-                      v-model="files"
-                      theme="file"
-                      :auto-upload="false"
-                      :multiple="true"
-                      :max="4"
-                      :allow-upload-duplicate-file="true"
-                      placeholder="上传简历/项目文档/txt/md，Demo 会读取文本文件内容"
-                      @select-change="handleSelectChange"
-                    />
-                    <t-textarea
-                      v-model="experienceInput"
-                      :autosize="{ minRows: 5, maxRows: 8 }"
-                      maxlength="1000"
-                      placeholder="也可以直接粘贴：课程项目、社团活动、比赛、实习、作品集、失败经历、焦虑点……"
-                    />
-                    <t-button theme="primary" block @click="absorbExperience">让求职鹅整理这段经历</t-button>
+              <t-card title="对话上下文" bordered>
+                <t-space direction="vertical" class="full-width">
+                  <t-space align="center" break-line>
+                    <t-tag theme="primary" variant="light">当前阶段</t-tag>
+                    <t-radio-group v-model="profile.stage" variant="default-filled" @change="refreshAll">
+                      <t-radio-button value="大一">大一</t-radio-button>
+                      <t-radio-button value="大二">大二</t-radio-button>
+                      <t-radio-button value="大三">大三</t-radio-button>
+                      <t-radio-button value="大四/研">大四/研</t-radio-button>
+                    </t-radio-group>
+                    <t-tag theme="success" variant="light">目标方向</t-tag>
+                    <t-select v-model="profile.target" :options="targetOptions" @change="refreshAll" />
                   </t-space>
-                </t-col>
-              </t-row>
+                  <t-upload
+                    v-model="files"
+                    theme="file"
+                    :auto-upload="false"
+                    :multiple="true"
+                    :max="4"
+                    :allow-upload-duplicate-file="true"
+                    placeholder="上传简历/项目文档/PDF/Word/txt/md，求职鹅会解析并写入长期经历档案"
+                    @select-change="handleSelectChange"
+                  />
+                </t-space>
+              </t-card>
 
               <t-chat-list :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
                 <template #content="{ item }">
@@ -91,7 +71,7 @@
                 <template #footer>
                   <t-chat-sender
                     v-model="chatInput"
-                    :textarea-props="{ placeholder: '告诉求职鹅：我做过什么？我哪里焦虑？我想投鹅厂什么岗位？' }"
+                    :textarea-props="{ placeholder: '直接和求职鹅说：我做过什么、上传材料里有什么、我哪里焦虑、我想投什么方向……' }"
                     @send="sendMessage"
                   >
                     <template #suffix="{ renderPresets }">
@@ -140,6 +120,9 @@
 
               <t-tab-panel value="advice" label="发展建议">
                 <t-card title="鹅厂方向建议" bordered>
+                  <template #actions>
+                    <t-button theme="primary" variant="text" :loading="isAnalyzing" @click="regenerateAdvice">重新生成发展建议</t-button>
+                  </template>
                   <t-space direction="vertical" size="large" class="full-width">
                     <t-alert theme="success" :message="targetAdvice" />
                     <t-table row-key="name" :data="displayRoleMatches" :columns="roleColumns" :pagination="null" bordered>
@@ -158,6 +141,9 @@
 
               <t-tab-panel value="care" label="情绪陪伴">
                 <t-card title="求职鹅的陪伴反馈" bordered>
+                  <template #actions>
+                    <t-button theme="primary" variant="text" :loading="isAnalyzing" @click="regenerateCare">重新生成情绪陪伴</t-button>
+                  </template>
                   <t-space direction="vertical" size="large">
                     <t-alert theme="warning" :message="careMessage" />
                     <t-collapse :default-value="['1']">
@@ -182,6 +168,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
+import gooseOne from './assets/goose-1.png';
+import gooseTwo from './assets/goose-2.png';
+import gooseThree from './assets/goose-3.png';
 import { chatWithLlm, streamWithLlm } from './services/llm';
 
 type ChatRole = 'user' | 'assistant';
@@ -226,6 +215,11 @@ interface UploadLikeFile {
 interface AssetMemory {
   title?: string;
   summary?: string;
+  scores?: {
+    asset?: number;
+    match?: number;
+    action?: number;
+  };
   abilityTags?: string[];
   starStory?: string;
   resumeBullets?: string[];
@@ -250,11 +244,14 @@ const targetOptions = [
   { label: '用户体验设计', value: '用户体验设计' },
 ];
 
+const gooseAvatars = [gooseOne, gooseTwo, gooseThree];
+const gooseAvatar = gooseAvatars[Math.floor(Math.random() * gooseAvatars.length)];
+
 const files = ref<UploadLikeFile[]>([]);
 const chatInput = ref('');
-const experienceInput = ref('');
 const assetTab = ref('document');
 const isStreaming = ref(false);
+const isAnalyzing = ref(false);
 const assetMemory = ref<AssetMemory>({});
 const collectedExperience = ref('我在大二下做过一个校园二手交易小程序，负责需求调研、原型设计和部分前端页面。项目最后有 200 多名同学试用，但我不知道这算不算有价值的经历，也担心自己比不过有大厂实习的同学。');
 
@@ -262,7 +259,7 @@ const now = () => new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minu
 
 const chatList = ref<ChatMessage[]>([
   {
-    avatar: '鹅',
+    avatar: gooseAvatar,
     name: '求职鹅',
     datetime: now(),
     role: 'assistant',
@@ -283,9 +280,10 @@ const hasProduct = computed(() => /需求|用户|调研|原型|产品|体验|流
 const hasTech = computed(() => /代码|前端|后端|算法|模型|数据|系统|小程序|开发|接口/.test(normalizedText.value));
 const hasOperation = computed(() => /活动|运营|内容|传播|社群|增长|转化|公众号/.test(normalizedText.value));
 
-const assetScore = computed(() => Math.min(96, 42 + (hasData.value ? 18 : 0) + (hasTeam.value ? 14 : 0) + (hasProduct.value || hasTech.value ? 14 : 0) + Math.min(18, normalizedText.value.length / 35)));
-const matchScore = computed(() => displayRoleMatches.value[0]?.score || 60);
-const actionScore = computed(() => Math.min(94, 48 + (profile.stage === '大一' ? 8 : 0) + (profile.stage === '大二' ? 16 : 0) + (profile.stage === '大三' ? 24 : 0) + (profile.stage === '大四/研' ? 30 : 0) + (hasData.value ? 12 : 0)));
+const clampScore = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+const assetScore = computed(() => clampScore(assetMemory.value.scores?.asset ?? (42 + (hasData.value ? 18 : 0) + (hasTeam.value ? 14 : 0) + (hasProduct.value || hasTech.value ? 14 : 0) + Math.min(18, normalizedText.value.length / 35))));
+const matchScore = computed(() => clampScore(assetMemory.value.scores?.match ?? displayRoleMatches.value[0]?.score ?? 60));
+const actionScore = computed(() => clampScore(assetMemory.value.scores?.action ?? (48 + (profile.stage === '大一' ? 8 : 0) + (profile.stage === '大二' ? 16 : 0) + (profile.stage === '大三' ? 24 : 0) + (profile.stage === '大四/研' ? 30 : 0) + (hasData.value ? 12 : 0))));
 
 const abilityTags = computed(() => {
   const tags = [];
@@ -410,22 +408,42 @@ const loadState = async () => {
   if (!state) return;
   if (state.profile) Object.assign(profile, state.profile);
   if (state.collectedExperience) collectedExperience.value = state.collectedExperience;
-  if (Array.isArray(state.chatList) && state.chatList.length) chatList.value = state.chatList;
+  if (Array.isArray(state.chatList) && state.chatList.length) {
+    chatList.value = state.chatList.map((item: ChatMessage) => (item.role === 'assistant' ? { ...item, avatar: gooseAvatar } : item));
+  }
   if (state.assetMemory) assetMemory.value = state.assetMemory;
 };
 
-const analyzeExperience = async () => {
-  const response = await fetch('/api/analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      experience: collectedExperience.value,
-      target: profile.target,
-      stage: profile.stage,
-    }),
-  });
-  if (!response.ok) return;
-  assetMemory.value = await response.json();
+const analyzeExperience = async (focus: 'all' | 'advice' | 'care' = 'all') => {
+  isAnalyzing.value = true;
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        experience: collectedExperience.value,
+        target: profile.target,
+        stage: profile.stage,
+        focus,
+      }),
+    });
+    if (!response.ok) return;
+    assetMemory.value = await response.json();
+  } finally {
+    isAnalyzing.value = false;
+  }
+};
+
+const regenerateAdvice = async () => {
+  await analyzeExperience('advice');
+  await saveState();
+  MessagePlugin.success('已重新生成发展建议');
+};
+
+const regenerateCare = async () => {
+  await analyzeExperience('care');
+  await saveState();
+  MessagePlugin.success('已重新生成情绪陪伴');
 };
 
 const refreshAll = async () => {
@@ -435,23 +453,12 @@ const refreshAll = async () => {
 
 const pushMessage = (role: ChatRole, content: string) => {
   chatList.value.push({
-    avatar: role === 'assistant' ? '鹅' : '我',
+    avatar: role === 'assistant' ? gooseAvatar : '我',
     name: role === 'assistant' ? '求职鹅' : '我',
     datetime: now(),
     role,
     content: [{ type: 'markdown', data: content }],
   });
-};
-
-const absorbExperience = async () => {
-  const input = experienceInput.value.trim();
-  if (input) collectedExperience.value = `${collectedExperience.value}\n${input}`.trim();
-  experienceInput.value = '';
-  assetTab.value = 'document';
-  await analyzeExperience();
-  pushMessage('assistant', buildExperienceReply());
-  await saveState();
-  MessagePlugin.success('已持久化个人经历，并更新结构化求职资产');
 };
 
 const buildExperienceReply = () => {
@@ -501,7 +508,7 @@ const sendMessage = async (value?: string) => {
   isStreaming.value = true;
 
   const assistantMessage: ChatMessage = {
-    avatar: '鹅',
+    avatar: gooseAvatar,
     name: '求职鹅',
     datetime: now(),
     role: 'assistant',
@@ -533,8 +540,8 @@ const clearChat = () => {
 };
 
 const loadSample = () => {
-  experienceInput.value = '我和 4 个同学做了一个校园二手交易小程序，我主要负责问卷调研、用户访谈、原型设计和首页前端。上线后有 230 名同学试用，收集到 42 条反馈。我很担心这只是课程作业，不知道能不能投腾讯产品策划。';
-  MessagePlugin.info('已填入示例经历，可点击整理');
+  chatInput.value = '我和 4 个同学做了一个校园二手交易小程序，我主要负责问卷调研、用户访谈、原型设计和首页前端。上线后有 230 名同学试用，收集到 42 条反馈。我很担心这只是课程作业，不知道能不能投腾讯产品策划。';
+  MessagePlugin.info('已填入示例经历，直接发送给求职鹅即可');
 };
 
 const exportDocument = () => {
