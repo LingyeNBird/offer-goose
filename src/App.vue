@@ -15,7 +15,7 @@
     <t-content class="app-content">
       <t-row :gutter="[24, 24]">
         <t-col :xs="12" :xl="7">
-          <t-card title="求职鹅对话" bordered>
+          <t-card title="求职鹅对话" bordered class="chat-card">
             <template #actions>
               <t-button theme="default" variant="text" @click="loadSample">一键填入示例</t-button>
             </template>
@@ -47,7 +47,7 @@
                 </t-space>
               </t-card>
 
-              <t-chat-list :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
+              <t-chat-list class="chat-list" :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
                 <template #content="{ item }">
                   <template v-for="(content, index) in item.content" :key="index">
                     <t-chat-content :content="content.data" :role="item.role" />
@@ -622,6 +622,20 @@ body {
 .app-header {
   background: var(--td-bg-color-container);
   border-bottom: 1px solid var(--td-component-border);
+}
+
+.chat-card {
+  max-height: calc(100vh - 160px);
+  overflow: hidden;
+}
+
+.chat-card :deep(.t-card__body) {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.chat-list {
+  height: 520px;
 }
 
 .full-width {
