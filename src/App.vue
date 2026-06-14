@@ -20,7 +20,7 @@
               <t-button theme="default" variant="text" @click="loadSample">一键填入示例</t-button>
             </template>
 
-            <t-space direction="vertical" size="large" class="full-width chat-body-content">
+            <section class="chat-body-content">
               <t-collapse :default-value="['context']">
                 <t-collapse-panel value="context" header="对话上下文">
                   <t-space direction="vertical" class="full-width">
@@ -49,15 +49,17 @@
                 </t-collapse-panel>
               </t-collapse>
 
-              <t-chat-list class="chat-list" :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
-                <template #content="{ item }">
-                  <template v-for="(content, index) in item.content" :key="index">
-                    <t-chat-content :content="content.data" :role="item.role" />
+              <section class="chat-scroll-area">
+                <t-chat-list class="chat-list" :data="chatList" :clear-history="chatList.length > 1" @clear="clearChat">
+                  <template #content="{ item }">
+                    <template v-for="(content, index) in item.content" :key="index">
+                      <t-chat-content :content="content.data" :role="item.role" />
+                    </template>
                   </template>
-                </template>
-              </t-chat-list>
+                </t-chat-list>
+              </section>
 
-            </t-space>
+            </section>
             <template #footer>
               <t-chat-sender
                 class="chat-sender"
@@ -642,12 +644,12 @@ body {
   overflow: hidden;
 }
 
-.chat-card :deep(.t-card__body) {
+.chat-card .t-card__body {
   height: calc(100vh - 360px);
   overflow: hidden;
 }
 
-.chat-card :deep(.t-card__footer) {
+.chat-card .t-card__footer {
   padding: var(--td-comp-paddingTB-s) var(--td-comp-paddingLR-l);
   background: var(--td-bg-color-container);
 }
@@ -656,14 +658,19 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  gap: var(--td-comp-margin-l);
+}
+
+.chat-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 96px;
+  scroll-padding-bottom: 96px;
 }
 
 .chat-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding-bottom: 96px;
-  scroll-padding-bottom: 96px;
+  min-height: 100%;
 }
 
 .chat-sender {
