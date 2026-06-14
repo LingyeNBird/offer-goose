@@ -1,21 +1,15 @@
 <template>
   <t-layout class="app-shell">
     <t-header class="app-header">
-      <t-row align="middle" justify="space-between" :gutter="[16, 16]">
-        <t-col :xs="12" :lg="9">
-          <t-space direction="vertical" size="small">
-            <t-typography-title :level="2">求职鹅｜学生求职成长陪伴智能体</t-typography-title>
-            <t-typography-title :level="5">上传经历、对话倾诉，AI 自动沉淀求职档案并陪你走向鹅厂 Offer</t-typography-title>
-          </t-space>
-        </t-col>
-        <t-col :xs="12" :lg="3">
-          <t-space break-line>
-            <t-tag theme="primary" variant="light">AI 陪伴</t-tag>
-            <t-tag theme="success" variant="light">经历资产化</t-tag>
-            <t-tag theme="warning" variant="light">鹅厂建议</t-tag>
-          </t-space>
-        </t-col>
-      </t-row>
+      <section class="header-title">
+        <t-typography-title :level="2">求职鹅｜学生求职成长陪伴智能体</t-typography-title>
+        <t-typography-text>上传经历、对话倾诉，AI 自动沉淀求职档案并陪你走向鹅厂 Offer</t-typography-text>
+      </section>
+      <t-space break-line>
+        <t-tag theme="primary" variant="light">AI 陪伴</t-tag>
+        <t-tag theme="success" variant="light">经历资产化</t-tag>
+        <t-tag theme="warning" variant="light">鹅厂建议</t-tag>
+      </t-space>
     </t-header>
 
     <t-content class="app-content">
@@ -597,7 +591,17 @@ body {
 }
 
 .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--td-comp-margin-l);
   padding: var(--td-comp-paddingTB-l) var(--td-comp-paddingLR-xxl);
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--td-comp-margin-xs);
 }
 
 .app-content {
