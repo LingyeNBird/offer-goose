@@ -1,27 +1,18 @@
 <template>
   <t-layout class="app-shell">
     <t-header class="app-header">
-      <t-row align="middle" justify="space-between" :gutter="[24, 24]">
-        <t-col :xs="12" :lg="8">
-          <t-space align="center" size="large">
-            <t-avatar :image="gooseAvatar" size="80px" />
-            <t-space direction="vertical" size="small">
-              <t-typography-title :level="1">求职鹅 Offer Goose</t-typography-title>
-              <t-typography-title :level="4">把每一段普通经历，养成可投递、可面试、可成长的 Offer 资产</t-typography-title>
-              <t-typography-text>
-                对话倾诉、上传经历、后端持久化档案、AI 结构化整理、流式情感陪伴与鹅厂方向建议，一站完成。
-              </t-typography-text>
-            </t-space>
+      <t-row align="middle" justify="space-between" :gutter="[16, 16]">
+        <t-col :xs="12" :lg="9">
+          <t-space direction="vertical" size="small">
+            <t-typography-title :level="2">求职鹅 Offer Goose</t-typography-title>
+            <t-typography-title :level="5">把普通经历养成可投递、可面试、可成长的 Offer 资产</t-typography-title>
           </t-space>
         </t-col>
-        <t-col :xs="12" :lg="4">
-          <t-space direction="vertical" size="small">
-            <t-alert theme="success" message="长期经历档案已由后端维护，刷新后可继续对话。" />
-            <t-space break-line>
-              <t-tag theme="primary" variant="light">AI 陪伴</t-tag>
-              <t-tag theme="success" variant="light">经历资产化</t-tag>
-              <t-tag theme="warning" variant="light">鹅厂方向建议</t-tag>
-            </t-space>
+        <t-col :xs="12" :lg="3">
+          <t-space break-line>
+            <t-tag theme="primary" variant="light">AI 陪伴</t-tag>
+            <t-tag theme="success" variant="light">经历资产化</t-tag>
+            <t-tag theme="warning" variant="light">鹅厂建议</t-tag>
           </t-space>
         </t-col>
       </t-row>
@@ -605,7 +596,10 @@ body {
   background: var(--td-bg-color-page);
 }
 
-.app-header,
+.app-header {
+  padding: var(--td-comp-paddingTB-l) var(--td-comp-paddingLR-xxl);
+}
+
 .app-content {
   padding: var(--td-comp-paddingTB-xxl) var(--td-comp-paddingLR-xxl);
 }
