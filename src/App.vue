@@ -14,7 +14,7 @@
 
     <t-content class="app-content">
       <t-row :gutter="[24, 24]">
-        <t-col :xs="12" :xl="7">
+        <t-col :xs="12" :xl="7" class="chat-column">
           <t-card title="求职鹅对话" bordered class="chat-card">
             <template #actions>
               <t-button theme="default" variant="text" @click="loadSample">一键填入示例</t-button>
@@ -639,17 +639,34 @@ body {
   border-bottom: 1px solid var(--td-component-border);
 }
 
+.chat-column {
+  display: flex;
+}
+
 .chat-card {
-  height: calc(100vh - 160px);
+  width: 100%;
+  height: 914px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-card > .t-loading__parent {
+  flex: 1;
+  min-height: 0;
+  display: flex;
   overflow: hidden;
 }
 
 .chat-card .t-card__body {
-  height: calc(100vh - 360px);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 }
 
 .chat-card .t-card__footer {
+  flex: none;
   padding: var(--td-comp-paddingTB-s) var(--td-comp-paddingLR-l);
   background: var(--td-bg-color-container);
 }
