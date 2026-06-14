@@ -492,28 +492,39 @@ const sendMessage = async (value?: string) => {
   chatInput.value = '';
   isStreaming.value = true;
 
-  const assistantMessage: ChatMessage = {
+  chatList.value.push({
     avatar: gooseAvatar,
     name: '求职鹅',
     datetime: now(),
     role: 'assistant',
     content: [{ type: 'markdown', data: '' }],
+  });
+  const assistantIndex = chatList.value.length - 1;
+  const updateAssistantMessage = (content: string) => {
+    chatList.value[assistantIndex] = {
+      ...chatList.value[assistantIndex],
+      content: [{ type: 'markdown', data: content }],
+    };
   };
-  chatList.value.push(assistantMessage);
+  const appendAssistantDelta = (delta: string) => {
+    updateAssistantMessage(`${chatList.value[assistantIndex].content[0].data}${delta}`);
+  };
 
   try {
-    await streamWithLlm([
-      { role: 'system', content: '你是求职鹅，一个温暖、务实、擅长维护学生长期经历档案并整理成求职资产的 AI 求职成长陪伴智能体。' },
-      { role: 'user', content: buildLlmPrompt(message) },
-    ], (delta) => {
-      assistantMessage.content[0].data += delta;
-    });
+    const messages = [
+      { role: 'system' as const, content: '你是求职鹅，一个温暖、务实、擅长维护学生长期经历档案并整理成求职资产的 AI 求职成长陪伴智能体。' },
+      { role: 'user' as const, content: buildLlmPrompt(message) },
+    ];
+    const streamedText = await streamWithLlm(messages, appendAssistantDelta);
+    if (!streamedText.trim()) {
+      updateAssistantMessage(await chatWithLlm(messages));
+    }
     collectedExperience.value = `${collectedExperience.value}\n${message}`.trim();
     await analyzeExperience();
   } catch (error) {
     console.error(error);
     MessagePlugin.warning('大模型流式请求失败，已使用本地 Demo 规则回复');
-    assistantMessage.content[0].data = buildChatReply(message);
+    updateAssistantMessage(buildChatReply(message));
   } finally {
     isStreaming.value = false;
     await saveState();

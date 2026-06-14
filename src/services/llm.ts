@@ -25,6 +25,7 @@ export const chatWithLlm = async (messages: LlmMessage[]) => {
 };
 
 export const streamWithLlm = async (messages: LlmMessage[], onDelta: (delta: string) => void) => {
+  let receivedText = '';
   const response = await fetch('/api/chat/stream', {
     method: 'POST',
     headers: {
@@ -52,14 +53,19 @@ export const streamWithLlm = async (messages: LlmMessage[], onDelta: (delta: str
     const events = buffer.split('\n\n');
     buffer = events.pop() || '';
 
-    events.forEach((event) => {
+    for (const event of events) {
       const line = event.split('\n').find((item) => item.startsWith('data: '));
-      if (!line) return;
+      if (!line) continue;
       const payload = line.replace(/^data: /, '');
-      if (payload === '[DONE]') return;
+      if (payload === '[DONE]') continue;
       const parsed = JSON.parse(payload);
       if (parsed.error) throw new Error(parsed.error);
-      if (parsed.delta) onDelta(parsed.delta);
-    });
+      if (parsed.delta) {
+        receivedText += parsed.delta;
+        onDelta(parsed.delta);
+      }
+    }
   }
+
+  return receivedText;
 };
