@@ -2,7 +2,7 @@
   <t-layout class="app-shell">
     <t-header class="app-header">
       <section class="header-title">
-        <t-typography-title :level="2">求职鹅｜学生求职成长陪伴智能体</t-typography-title>
+        <t-typography-text class="header-main-title">求职鹅｜学生求职成长陪伴智能体</t-typography-text>
         <t-typography-text>上传经历、对话倾诉，AI 自动沉淀求职档案并陪你走向鹅厂 Offer</t-typography-text>
       </section>
       <t-space break-line>
@@ -20,7 +20,7 @@
               <t-button theme="default" variant="text" @click="loadSample">一键填入示例</t-button>
             </template>
 
-            <t-space direction="vertical" size="large" class="full-width">
+            <t-space direction="vertical" size="large" class="full-width chat-body-content">
               <t-collapse :default-value="['context']">
                 <t-collapse-panel value="context" header="对话上下文">
                   <t-space direction="vertical" class="full-width">
@@ -57,6 +57,8 @@
                 </template>
               </t-chat-list>
 
+            </t-space>
+            <template #footer>
               <t-chat-sender
                 class="chat-sender"
                 v-model="chatInput"
@@ -67,7 +69,7 @@
                   <component :is="renderPresets([])" />
                 </template>
               </t-chat-sender>
-            </t-space>
+            </template>
           </t-card>
         </t-col>
 
@@ -233,6 +235,7 @@ const targetOptions = [
 
 const gooseAvatars = [gooseOne, gooseTwo, gooseThree];
 const gooseAvatar = gooseAvatars[Math.floor(Math.random() * gooseAvatars.length)];
+const userAvatar = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#E7F0FF"/><circle cx="32" cy="24" r="11" fill="#2F7DFF"/><path d="M14 53c3.5-11 12-17 18-17s14.5 6 18 17" fill="#2F7DFF"/></svg>')}`;
 
 const files = ref<UploadLikeFile[]>([]);
 const chatInput = ref('');
@@ -396,7 +399,10 @@ const loadState = async () => {
   if (state.profile) Object.assign(profile, state.profile);
   if (state.collectedExperience) collectedExperience.value = state.collectedExperience;
   if (Array.isArray(state.chatList) && state.chatList.length) {
-    chatList.value = state.chatList.map((item: ChatMessage) => (item.role === 'assistant' ? { ...item, avatar: gooseAvatar } : item));
+    chatList.value = state.chatList.map((item: ChatMessage) => ({
+      ...item,
+      avatar: item.role === 'assistant' ? gooseAvatar : userAvatar,
+    }));
   }
   if (state.assetMemory) assetMemory.value = state.assetMemory;
 };
@@ -440,7 +446,7 @@ const refreshAll = async () => {
 
 const pushMessage = (role: ChatRole, content: string) => {
   chatList.value.push({
-    avatar: role === 'assistant' ? gooseAvatar : '我',
+    avatar: role === 'assistant' ? gooseAvatar : userAvatar,
     name: role === 'assistant' ? '求职鹅' : '我',
     datetime: now(),
     role,
@@ -489,7 +495,7 @@ const buildLlmPrompt = (message: string) => `你是“求职鹅”，一个面�
 
 const sendMessage = async (value?: string) => {
   const message = (value || chatInput.value).trim();
-  if (!message || isStreaming.value) return;
+  if (!message) return;
   pushMessage('user', message);
   chatInput.value = '';
   isStreaming.value = true;
@@ -617,6 +623,11 @@ body {
   gap: var(--td-comp-margin-xs);
 }
 
+.header-main-title {
+  color: var(--td-text-color-primary);
+  font: var(--td-font-headline-medium);
+}
+
 .app-content {
   padding: var(--td-comp-paddingTB-xxl) var(--td-comp-paddingLR-xxl);
 }
@@ -632,11 +643,16 @@ body {
 }
 
 .chat-card :deep(.t-card__body) {
-  height: calc(100vh - 220px);
+  height: calc(100vh - 360px);
   overflow: hidden;
 }
 
-.chat-card :deep(.t-card__body > .t-space) {
+.chat-card :deep(.t-card__footer) {
+  padding: var(--td-comp-paddingTB-s) var(--td-comp-paddingLR-l);
+  background: var(--td-bg-color-container);
+}
+
+.chat-body-content {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -646,12 +662,12 @@ body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-bottom: 128px;
-  scroll-padding-bottom: 128px;
+  padding-bottom: 96px;
+  scroll-padding-bottom: 96px;
 }
 
 .chat-sender {
-  flex: none;
+  width: 100%;
 }
 
 .full-width {
