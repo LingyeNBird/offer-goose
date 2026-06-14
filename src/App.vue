@@ -55,18 +55,18 @@
                     <t-chat-content :content="content.data" :role="item.role" />
                   </template>
                 </template>
-                <template #footer>
-                  <t-chat-sender
-                    v-model="chatInput"
-                    :textarea-props="{ placeholder: '直接和求职鹅说：我做过什么、上传材料里有什么、我哪里焦虑、我想投什么方向……' }"
-                    @send="sendMessage"
-                  >
-                    <template #suffix="{ renderPresets }">
-                      <component :is="renderPresets([])" />
-                    </template>
-                  </t-chat-sender>
-                </template>
               </t-chat-list>
+
+              <t-chat-sender
+                class="chat-sender"
+                v-model="chatInput"
+                :textarea-props="{ placeholder: '直接和求职鹅说：我做过什么、上传材料里有什么、我哪里焦虑、我想投什么方向……' }"
+                @send="sendMessage"
+              >
+                <template #suffix="{ renderPresets }">
+                  <component :is="renderPresets([])" />
+                </template>
+              </t-chat-sender>
             </t-space>
           </t-card>
         </t-col>
@@ -627,17 +627,29 @@ body {
 }
 
 .chat-card {
-  max-height: calc(100vh - 160px);
+  height: calc(100vh - 160px);
   overflow: hidden;
 }
 
 .chat-card :deep(.t-card__body) {
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
+  height: calc(100vh - 220px);
+  overflow: hidden;
+}
+
+.chat-card :deep(.t-card__body > .t-space) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-list {
-  height: 520px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.chat-sender {
+  flex: none;
 }
 
 .full-width {
