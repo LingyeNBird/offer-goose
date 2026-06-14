@@ -12,12 +12,15 @@
 - 情感陪伴：识别焦虑、迷茫、自我否定，先共情，再给可执行小动作。
 - 发展建议：根据经历信号推荐技术研发、产品策划、数据分析、游戏策划、运营、体验设计等方向。
 - 文档导出：一键导出 Markdown 版「求职鹅成长档案」。
+- 上传解析：后端解析 txt/md/json/csv/pdf/docx，解析文本写入长期个人经历档案。
+- 后端持久化：对话、画像、个人经历、结构化资产保存到 `data/state.json`。
+- 流式输出：对话通过后端 SSE 流式返回，前端实时展示。
 
 ## 评审亮点
 
 - 思辨深度：把招聘前置为学生成长陪伴，解决信息差之外的表达差、自信差和行动差。
 - 创意巧思：用「求职鹅」拟人化陪伴，把普通经历翻译成鹅厂岗位语言。
-- 功能完整度：对话、上传、经历结构化、文档生成、岗位建议、情绪陪伴、行动计划、导出闭环完整。
+- 功能完整度：对话、上传解析、后端持久化、LLM 结构化生成、流式输出、文档生成、岗位建议、情绪陪伴、行动计划、导出闭环完整。
 - 交互体验：左侧对话与经历输入，右侧实时沉淀资产，避免复杂表单。
 - 落地可行性：本地规则无 Key 可跑；配置 LLM 后走 Node 代理，后续可接岗位库、课程库、宣讲会和投递系统。
 
@@ -56,11 +59,17 @@ pnpm build
 ## Docker 部署
 
 ```bash
-docker build -t offer-goose .
-docker run -p 8080:3000 --env-file .env.local offer-goose
+docker compose up --build
 ```
 
-访问 `http://localhost:8080`。
+访问 `http://localhost:8080`。Compose 会把 `./data` 挂载到容器 `/app/data`，用于保存后端持久化状态。
+
+也可以直接 Docker 运行：
+
+```bash
+docker build -t offer-goose .
+docker run -p 8080:3000 --env-file .env.local -v ./data:/app/data offer-goose
+```
 
 ## 演示脚本
 

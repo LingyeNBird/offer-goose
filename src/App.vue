@@ -142,13 +142,13 @@
                 <t-card title="鹅厂方向建议" bordered>
                   <t-space direction="vertical" size="large" class="full-width">
                     <t-alert theme="success" :message="targetAdvice" />
-                    <t-table row-key="name" :data="rankedRoles" :columns="roleColumns" :pagination="null" bordered>
+                    <t-table row-key="name" :data="displayRoleMatches" :columns="roleColumns" :pagination="null" bordered>
                       <template #score="{ row }">
                         <t-progress :percentage="row.score" theme="line" />
                       </template>
                     </t-table>
                     <t-timeline>
-                      <t-timeline-item v-for="item in growthPlan" :key="item.title" :label="item.label">
+                      <t-timeline-item v-for="item in displayGrowthPlan" :key="item.title" :label="item.label">
                         {{ item.title }}：{{ item.content }}
                       </t-timeline-item>
                     </t-timeline>
@@ -180,9 +180,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { chatWithLlm } from './services/llm';
+import { chatWithLlm, streamWithLlm } from './services/llm';
 
 type ChatRole = 'user' | 'assistant';
 
@@ -223,6 +223,19 @@ interface UploadLikeFile {
   originFile?: File;
 }
 
+interface AssetMemory {
+  title?: string;
+  summary?: string;
+  abilityTags?: string[];
+  starStory?: string;
+  resumeBullets?: string[];
+  missingInfo?: string[];
+  roleMatches?: RoleMatch[];
+  careMessage?: string;
+  growthPlan?: GrowthPlanItem[];
+  nextAction?: string;
+}
+
 const profile = reactive<Profile>({
   stage: '大三',
   target: '产品策划',
@@ -241,6 +254,8 @@ const files = ref<UploadLikeFile[]>([]);
 const chatInput = ref('');
 const experienceInput = ref('');
 const assetTab = ref('document');
+const isStreaming = ref(false);
+const assetMemory = ref<AssetMemory>({});
 const collectedExperience = ref('我在大二下做过一个校园二手交易小程序，负责需求调研、原型设计和部分前端页面。项目最后有 200 多名同学试用，但我不知道这算不算有价值的经历，也担心自己比不过有大厂实习的同学。');
 
 const now = () => new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -269,7 +284,7 @@ const hasTech = computed(() => /代码|前端|后端|算法|模型|数据|系统
 const hasOperation = computed(() => /活动|运营|内容|传播|社群|增长|转化|公众号/.test(normalizedText.value));
 
 const assetScore = computed(() => Math.min(96, 42 + (hasData.value ? 18 : 0) + (hasTeam.value ? 14 : 0) + (hasProduct.value || hasTech.value ? 14 : 0) + Math.min(18, normalizedText.value.length / 35)));
-const matchScore = computed(() => rankedRoles.value[0]?.score || 60);
+const matchScore = computed(() => displayRoleMatches.value[0]?.score || 60);
 const actionScore = computed(() => Math.min(94, 48 + (profile.stage === '大一' ? 8 : 0) + (profile.stage === '大二' ? 16 : 0) + (profile.stage === '大三' ? 24 : 0) + (profile.stage === '大四/研' ? 30 : 0) + (hasData.value ? 12 : 0)));
 
 const abilityTags = computed(() => {
@@ -283,14 +298,20 @@ const abilityTags = computed(() => {
   return Array.from(new Set(tags));
 });
 
+const displayAbilityTags = computed(() => assetMemory.value.abilityTags?.length ? assetMemory.value.abilityTags : abilityTags.value);
+const displayMissingInfo = computed(() => assetMemory.value.missingInfo?.length ? assetMemory.value.missingInfo.join('、') : missingInfo.value);
+const displayGrowthPlan = computed(() => assetMemory.value.growthPlan?.length ? assetMemory.value.growthPlan : growthPlan.value);
+const displayRoleMatches = computed(() => assetMemory.value.roleMatches?.length ? assetMemory.value.roleMatches : rankedRoles.value);
+
 const documentDescriptions = computed(() => [
   { label: '经历标题', content: documentTitle.value },
   { label: '适配方向', content: profile.target },
-  { label: '能力标签', content: abilityTags.value.join(' / ') },
-  { label: '待补充信息', content: missingInfo.value },
+  { label: '能力标签', content: displayAbilityTags.value.join(' / ') },
+  { label: '待补充信息', content: displayMissingInfo.value },
 ]);
 
 const documentTitle = computed(() => {
+  if (assetMemory.value.title) return assetMemory.value.title;
   if (hasProduct.value && hasTech.value) return '校园产品从 0 到 1 项目经历';
   if (hasOperation.value) return '校园用户运营与活动增长经历';
   if (hasTech.value) return '课程/竞赛技术项目经历';
@@ -306,12 +327,13 @@ const missingInfo = computed(() => {
 });
 
 const starStory = computed(() => {
-  return `S/T：在${profile.stage}阶段，你参与了「${documentTitle.value}」，目标是解决真实用户/团队中的具体问题。A：你承担了${abilityTags.value.slice(0, 3).join('、')}相关工作，并推动方案落地。R：当前经历已经具备求职价值，建议继续补充可量化结果、关键困难和复盘反思，让它更适合投递${profile.target}方向。`;
+  if (assetMemory.value.starStory) return assetMemory.value.starStory;
+  return `S/T：在${profile.stage}阶段，你参与了「${documentTitle.value}」，目标是解决真实用户/团队中的具体问题。A：你承担了${displayAbilityTags.value.slice(0, 3).join('、')}相关工作，并推动方案落地。R：当前经历已经具备求职价值，建议继续补充可量化结果、关键困难和复盘反思，让它更适合投递${profile.target}方向。`;
 });
 
-const resumeBullets = computed(() => [
-  `围绕${documentTitle.value}，完成需求拆解、方案推进与结果复盘，沉淀${abilityTags.value.join('、')}等能力。`,
-  hasData.value ? '在项目中形成可量化结果，可进一步提炼用户规模、效率提升、转化变化或满意度反馈。' : '建议补充项目数据，例如用户数、完成率、效率提升、活动参与人数或作品访问量。',
+const resumeBullets = computed(() => assetMemory.value.resumeBullets?.length ? assetMemory.value.resumeBullets : [
+  `围绕${documentTitle.value}，完成需求拆解、方案推进与结果复盘，沉淀${displayAbilityTags.value.join('、')}等能力。`,
+  hasData.value ? '在项目中形成可量化结果，可进一步提炼用户规模、效率提升、转化变化或满意度反馈。' : '建议补充项目数据，例如用户数、效率提升、活动参与人数或作品访问量。',
   `面向${profile.target}岗位，可将该经历包装为“发现问题—设计方案—协作落地—复盘优化”的面试故事。`,
 ]);
 
@@ -339,8 +361,8 @@ const roleColumns = [
 ];
 
 const targetAdvice = computed(() => {
-  const top = rankedRoles.value[0];
-  return `当前最建议优先验证「${top.name}」，因为你的经历里已经出现了${abilityTags.value.slice(0, 3).join('、')}信号。`;
+  const top = displayRoleMatches.value[0];
+  return `当前最建议优先验证「${top.name}」，因为你的经历里已经出现了${displayAbilityTags.value.slice(0, 3).join('、')}信号。`;
 });
 
 const growthPlan = computed<GrowthPlanItem[]>(() => [
@@ -351,12 +373,13 @@ const growthPlan = computed<GrowthPlanItem[]>(() => [
 ]);
 
 const careMessage = computed(() => {
+  if (assetMemory.value.careMessage) return assetMemory.value.careMessage;
   if (hasAnxiety.value) return '你现在的焦虑不是能力差，而是经历还没有被翻译成招聘语言。我们先把它整理清楚，你会更有掌控感。';
   return '这段经历已经有价值。下一步不是重做一段更厉害的经历，而是把你的角色、动作和结果讲清楚。';
 });
 
 const rescuePlan = computed(() => '先暂停横向比较。用 5 分钟写下你做过的具体动作，5 分钟补一个数字结果，5 分钟把它改成一条简历 bullet。只完成这 15 分钟就算赢。');
-const nextOneThing = computed(() => `只做一件事：${growthPlan.value[0].content}`);
+const nextOneThing = computed(() => `只做一件事：${assetMemory.value.nextAction || displayGrowthPlan.value[0].content}`);
 
 const buildRoleReason = (name: string) => {
   if (name === '产品策划') return hasProduct.value ? '出现需求、用户、原型或体验信号' : '可通过经历复盘验证产品意识';
@@ -367,7 +390,48 @@ const buildRoleReason = (name: string) => {
   return '可通过玩法拆解和项目原型进一步验证';
 };
 
-const refreshAll = () => undefined;
+const saveState = async () => {
+  await fetch('/api/state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      profile: { ...profile },
+      collectedExperience: collectedExperience.value,
+      chatList: chatList.value,
+      assetMemory: assetMemory.value,
+    }),
+  });
+};
+
+const loadState = async () => {
+  const response = await fetch('/api/state');
+  if (!response.ok) return;
+  const state = await response.json();
+  if (!state) return;
+  if (state.profile) Object.assign(profile, state.profile);
+  if (state.collectedExperience) collectedExperience.value = state.collectedExperience;
+  if (Array.isArray(state.chatList) && state.chatList.length) chatList.value = state.chatList;
+  if (state.assetMemory) assetMemory.value = state.assetMemory;
+};
+
+const analyzeExperience = async () => {
+  const response = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      experience: collectedExperience.value,
+      target: profile.target,
+      stage: profile.stage,
+    }),
+  });
+  if (!response.ok) return;
+  assetMemory.value = await response.json();
+};
+
+const refreshAll = async () => {
+  await analyzeExperience();
+  await saveState();
+};
 
 const pushMessage = (role: ChatRole, content: string) => {
   chatList.value.push({
@@ -379,13 +443,15 @@ const pushMessage = (role: ChatRole, content: string) => {
   });
 };
 
-const absorbExperience = () => {
+const absorbExperience = async () => {
   const input = experienceInput.value.trim();
   if (input) collectedExperience.value = `${collectedExperience.value}\n${input}`.trim();
   experienceInput.value = '';
   assetTab.value = 'document';
+  await analyzeExperience();
   pushMessage('assistant', buildExperienceReply());
-  MessagePlugin.success('求职鹅已整理经历文档');
+  await saveState();
+  MessagePlugin.success('已持久化个人经历，并更新结构化求职资产');
 };
 
 const buildExperienceReply = () => {
@@ -412,39 +478,53 @@ const buildChatReply = (message: string) => {
 
 const buildLlmPrompt = (message: string) => `你是“求职鹅”，一个面向在校大学生的腾讯/鹅厂求职成长陪伴智能体。请用温暖、具体、可执行的中文回复学生。
 
+【长期个人经历档案｜由后端持久化维护】
 学生阶段：${profile.stage}
 目标方向：${profile.target}
-已收集经历：${normalizedText.value}
-当前能力标签：${abilityTags.value.join('、')}
-当前待补充信息：${missingInfo.value}
-本地建议岗位：${rankedRoles.value[0]?.name}
+完整经历原文：${normalizedText.value}
+结构化求职资产：${JSON.stringify(assetMemory.value)}
 
-回复要求：
-1. 先情感陪伴，接住焦虑或不确定感；
-2. 把学生经历翻译成求职资产；
-3. 给出适合鹅厂岗位方向的发展建议；
-4. 最后只给 1-3 个下一步行动；
-5. 不要编造真实招聘名额或内部信息。
+【你的任务】
+1. 把学生新输入合并理解为长期个人经历档案的一部分，不要只看当前句子；
+2. 如果学生上传/补充了经历，要指出这段经历能证明什么能力，以及还缺什么证据；
+3. 如果学生焦虑，先情感陪伴，再把焦虑拆成可执行动作；
+4. 给出适合鹅厂方向的发展建议，但不要编造真实招聘名额或内部信息；
+5. 最后只给 1-3 个下一步行动。
 
 学生刚刚说：${message}`;
 
 const sendMessage = async (value?: string) => {
   const message = (value || chatInput.value).trim();
-  if (!message) return;
+  if (!message || isStreaming.value) return;
   pushMessage('user', message);
   chatInput.value = '';
+  isStreaming.value = true;
+
+  const assistantMessage: ChatMessage = {
+    avatar: '鹅',
+    name: '求职鹅',
+    datetime: now(),
+    role: 'assistant',
+    content: [{ type: 'markdown', data: '' }],
+  };
+  chatList.value.push(assistantMessage);
 
   try {
-    const reply = await chatWithLlm([
-      { role: 'system', content: '你是求职鹅，一个温暖、务实、擅长把学生经历整理成求职资产的 AI 求职成长陪伴智能体。' },
+    await streamWithLlm([
+      { role: 'system', content: '你是求职鹅，一个温暖、务实、擅长维护学生长期经历档案并整理成求职资产的 AI 求职成长陪伴智能体。' },
       { role: 'user', content: buildLlmPrompt(message) },
-    ]);
+    ], (delta) => {
+      assistantMessage.content[0].data += delta;
+    });
     collectedExperience.value = `${collectedExperience.value}\n${message}`.trim();
-    pushMessage('assistant', reply || buildChatReply(message));
+    await analyzeExperience();
   } catch (error) {
     console.error(error);
-    MessagePlugin.warning('大模型请求失败，已使用本地 Demo 规则回复');
-    pushMessage('assistant', buildChatReply(message));
+    MessagePlugin.warning('大模型流式请求失败，已使用本地 Demo 规则回复');
+    assistantMessage.content[0].data = buildChatReply(message);
+  } finally {
+    isStreaming.value = false;
+    await saveState();
   }
 };
 
@@ -458,7 +538,7 @@ const loadSample = () => {
 };
 
 const exportDocument = () => {
-  const markdown = `# 求职鹅成长档案\n\n## 基本信息\n\n- 当前阶段：${profile.stage}\n- 目标方向：${profile.target}\n- 推荐方向：${rankedRoles.value[0]?.name}\n- 经历成熟度：${Math.round(assetScore.value)}%\n\n## 经历标题\n\n${documentTitle.value}\n\n## 能力标签\n\n${abilityTags.value.map((tag) => `- ${tag}`).join('\n')}\n\n## STAR 经历稿\n\n${starStory.value}\n\n## 简历 Bullet\n\n${resumeBullets.value.map((item) => `- ${item}`).join('\n')}\n\n## 待补充信息\n\n${missingInfo.value}\n\n## 发展建议\n\n${targetAdvice.value}\n\n${growthPlan.value.map((item) => `- ${item.label}｜${item.title}：${item.content}`).join('\n')}\n\n## 情绪陪伴\n\n${careMessage.value}\n\n${rescuePlan.value}\n`;
+  const markdown = `# 求职鹅成长档案\n\n## 基本信息\n\n- 当前阶段：${profile.stage}\n- 目标方向：${profile.target}\n- 推荐方向：${displayRoleMatches.value[0]?.name}\n- 经历成熟度：${Math.round(assetScore.value)}%\n\n## 经历标题\n\n${documentTitle.value}\n\n## 能力标签\n\n${displayAbilityTags.value.map((tag) => `- ${tag}`).join('\n')}\n\n## STAR 经历稿\n\n${starStory.value}\n\n## 简历 Bullet\n\n${resumeBullets.value.map((item) => `- ${item}`).join('\n')}\n\n## 待补充信息\n\n${displayMissingInfo.value}\n\n## 发展建议\n\n${targetAdvice.value}\n\n${displayGrowthPlan.value.map((item) => `- ${item.label}｜${item.title}：${item.content}`).join('\n')}\n\n## 情绪陪伴\n\n${careMessage.value}\n\n${rescuePlan.value}\n`;
   const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -469,22 +549,41 @@ const exportDocument = () => {
   MessagePlugin.success('已导出求职文档');
 };
 
-const handleSelectChange = (selectedFiles: UploadLikeFile[]) => {
+const handleSelectChange = async (selectedFiles: UploadLikeFile[]) => {
+  const formData = new FormData();
   selectedFiles.forEach((item) => {
     const rawFile = item.raw || item.originFile;
-    if (!rawFile) return;
-    if (!/text|json|markdown/.test(rawFile.type) && !/\.(txt|md|json)$/i.test(rawFile.name)) {
-      experienceInput.value = `${experienceInput.value}\n已上传文件：${rawFile.name}。请在 Demo 中补充文件里的关键经历，正式版会接入文档解析服务。`.trim();
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      experienceInput.value = `${experienceInput.value}\n${String(reader.result || '')}`.trim();
-      MessagePlugin.success(`已读取 ${rawFile.name}`);
-    };
-    reader.readAsText(rawFile);
+    if (rawFile) formData.append('files', rawFile);
   });
+
+  if (!formData.has('files')) return;
+
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) throw new Error(`Upload parse failed: ${response.status}`);
+    const result = await response.json();
+    const parsedText = String(result.text || '').trim();
+    if (parsedText) {
+      collectedExperience.value = `${collectedExperience.value}\n\n【上传解析经历】\n${parsedText}`.trim();
+      await analyzeExperience();
+      await saveState();
+      pushMessage('assistant', `我已经把上传文件解析并写入你的长期个人经历档案。\n\n这份档案之后会持续作为大模型提示词的一部分，用来维护你的简历素材、面试故事和发展建议。`);
+      MessagePlugin.success('上传内容已解析并持久化为个人经历');
+    }
+  } catch (error) {
+    console.error(error);
+    MessagePlugin.error('文件解析失败，请改为粘贴文本经历');
+  }
 };
+
+onMounted(async () => {
+  await loadState();
+  if (!assetMemory.value.title) await analyzeExperience();
+  await saveState();
+});
 </script>
 
 <style>

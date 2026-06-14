@@ -1,0 +1,12 @@
+services:
+  offer-goose:
+    build: .
+    ports:
+      - "8080:3000"
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
