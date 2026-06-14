@@ -4,8 +4,8 @@
       <t-row align="middle" justify="space-between" :gutter="[16, 16]">
         <t-col :xs="12" :lg="9">
           <t-space direction="vertical" size="small">
-            <t-typography-title :level="2">求职鹅 Offer Goose</t-typography-title>
-            <t-typography-title :level="5">把普通经历养成可投递、可面试、可成长的 Offer 资产</t-typography-title>
+            <t-typography-title :level="2">求职鹅｜学生求职成长陪伴智能体</t-typography-title>
+            <t-typography-title :level="5">上传经历、对话倾诉，AI 自动沉淀求职档案并陪你走向鹅厂 Offer</t-typography-title>
           </t-space>
         </t-col>
         <t-col :xs="12" :lg="3">
