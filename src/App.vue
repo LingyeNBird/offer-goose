@@ -120,6 +120,8 @@
               </t-row>
             </t-card>
 
+            <t-button theme="primary" variant="outline" block @click="exportDocument">导出求职文档 Markdown</t-button>
+
             <t-tabs v-model="assetTab">
               <t-tab-panel value="document" label="经历文档">
                 <t-card title="AI 自动整理文档" bordered>
@@ -180,7 +182,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { chatWithLlm, isLlmConfigured } from './services/llm';
+import { chatWithLlm } from './services/llm';
 
 type ChatRole = 'user' | 'assistant';
 
@@ -432,11 +434,6 @@ const sendMessage = async (value?: string) => {
   pushMessage('user', message);
   chatInput.value = '';
 
-  if (!isLlmConfigured) {
-    pushMessage('assistant', buildChatReply(message));
-    return;
-  }
-
   try {
     const reply = await chatWithLlm([
       { role: 'system', content: '你是求职鹅，一个温暖、务实、擅长把学生经历整理成求职资产的 AI 求职成长陪伴智能体。' },
@@ -458,6 +455,18 @@ const clearChat = () => {
 const loadSample = () => {
   experienceInput.value = '我和 4 个同学做了一个校园二手交易小程序，我主要负责问卷调研、用户访谈、原型设计和首页前端。上线后有 230 名同学试用，收集到 42 条反馈。我很担心这只是课程作业，不知道能不能投腾讯产品策划。';
   MessagePlugin.info('已填入示例经历，可点击整理');
+};
+
+const exportDocument = () => {
+  const markdown = `# 求职鹅成长档案\n\n## 基本信息\n\n- 当前阶段：${profile.stage}\n- 目标方向：${profile.target}\n- 推荐方向：${rankedRoles.value[0]?.name}\n- 经历成熟度：${Math.round(assetScore.value)}%\n\n## 经历标题\n\n${documentTitle.value}\n\n## 能力标签\n\n${abilityTags.value.map((tag) => `- ${tag}`).join('\n')}\n\n## STAR 经历稿\n\n${starStory.value}\n\n## 简历 Bullet\n\n${resumeBullets.value.map((item) => `- ${item}`).join('\n')}\n\n## 待补充信息\n\n${missingInfo.value}\n\n## 发展建议\n\n${targetAdvice.value}\n\n${growthPlan.value.map((item) => `- ${item.label}｜${item.title}：${item.content}`).join('\n')}\n\n## 情绪陪伴\n\n${careMessage.value}\n\n${rescuePlan.value}\n`;
+  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = '求职鹅成长档案.md';
+  link.click();
+  URL.revokeObjectURL(url);
+  MessagePlugin.success('已导出求职文档');
 };
 
 const handleSelectChange = (selectedFiles: UploadLikeFile[]) => {

@@ -3,34 +3,23 @@ export interface LlmMessage {
   content: string;
 }
 
-const apiBaseUrl = import.meta.env.VITE_LLM_API_BASE_URL || '';
-const apiKey = import.meta.env.VITE_LLM_API_KEY || '';
-const model = import.meta.env.VITE_LLM_MODEL || 'gpt-4o-mini';
-
-export const isLlmConfigured = Boolean(apiBaseUrl && apiKey);
-
 export const chatWithLlm = async (messages: LlmMessage[]) => {
-  if (!isLlmConfigured) {
-    throw new Error('LLM API is not configured. Copy .env.example to .env.local and fill VITE_LLM_API_KEY.');
-  }
-
-  const response = await fetch(`${apiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
+  const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.7,
-    }),
+    body: JSON.stringify({ messages }),
   });
+
+  if (response.status === 501) {
+    throw new Error('LLM_API_KEY is not configured. The demo will fall back to local rules.');
+  }
 
   if (!response.ok) {
     throw new Error(`LLM request failed: ${response.status}`);
   }
 
   const data = await response.json();
-  return data?.choices?.[0]?.message?.content || '';
+  return data?.content || '';
 };
